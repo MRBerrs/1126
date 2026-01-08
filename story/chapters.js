@@ -27,6 +27,7 @@ window.STORY_CHAPTERS = {
   },
 
   silent: {
+    bg: "bg-silent",
     lines: [
       "Silence felt safer.",
       "But it slowly created distance."

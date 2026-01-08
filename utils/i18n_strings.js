@@ -1,7 +1,7 @@
 window.I18N_STRINGS = {
   en: {
     menu: {
-      title: "Our Story",
+      title: "Long Distance Love",
       begin: "Tap to begin",
       langToggle: "EN"
     },
@@ -17,7 +17,7 @@ window.I18N_STRINGS = {
     },
     celebration: {
       lines: [
-        "Happy Birthday, sayang! 🎂",
+        "Happy Birthday, prensesim! 🎂",
         "I made this just for you."
       ],
       loveYou: "Love you ❤"
@@ -25,7 +25,7 @@ window.I18N_STRINGS = {
   },
   tr: {
     menu: {
-      title: "Hikayemiz",
+      title: "Uzak Mesafe Aşkı",
       begin: "Başlamak için dokun",
       langToggle: "TR"
     },
@@ -41,7 +41,7 @@ window.I18N_STRINGS = {
     },
     celebration: {
       lines: [
-        "Mutlu Yıllar, aşkım! 🎂",
+        "Mutlu Yıllar, prensesim! 🎂",
         "Bunu sadece senin için yaptım."
       ],
       loveYou: "Seni seviyorum ❤"

@@ -7,9 +7,13 @@ window.EndingScene = class EndingScene extends Phaser.Scene {
 
   create() {
     const { width, height } = this.scale;
-    this.add.image(width / 2, height / 2, "bg-ending").setDisplaySize(width, height);
+    // use bg-ending if available
+    if (this.textures.exists('bg-ending')) {
+      this.add.image(width / 2, height / 2, "bg-ending").setDisplaySize(width, height);
+    } else {
+      this.add.rectangle(width / 2, height / 2, width, height, 0x111111).setDepth(0);
+    }
 
-    // ensure visible if we came from a fadeOut
     this.cameras.main.fadeIn(300);
 
     this.typewriter = new window.Typewriter(this, width / 2, height * 0.35, {
@@ -19,28 +23,28 @@ window.EndingScene = class EndingScene extends Phaser.Scene {
       wordWrap: { width: width * 0.85 }
     });
 
-    const lines = [
-      "Maybe we haven't met each other yet.",
-      "But believe me.",
-      "I will come there,",
-      "to fulfill my promise to you."
-    ];
+    // get lines from I18N_STRINGS ending block
+    const lines = window.I18N_STRINGS && window.I18N_STRINGS[window.I18n.lang] && window.I18N_STRINGS[window.I18n.lang].ending
+      ? window.I18N_STRINGS[window.I18n.lang].ending.lines
+      : window.I18N_STRINGS.en.ending.lines;
 
     this.typewriter.setLines(lines);
 
     this.typewriter.onFinish = () => {
-      // show Celebrate button when all lines done
+      const celebrateLabel = window.I18N_STRINGS && window.I18N_STRINGS[window.I18n.lang] && window.I18N_STRINGS[window.I18n.lang].ending
+        ? window.I18N_STRINGS[window.I18n.lang].ending.celebrate
+        : window.I18N_STRINGS.en.ending.celebrate;
+
       this.celebrateBtn = new window.ChoiceButton(
         this,
         width / 2,
         height * 0.7,
-        "Celebrate 🎉",
+        celebrateLabel,
         () => {
           if (this.isTransitioning) return;
           this.isTransitioning = true;
           this.input.enabled = false;
           if (this.celebrateBtn) { this.celebrateBtn.destroy(); this.celebrateBtn = null; }
-
           this.cameras.main.fadeOut(600);
           this.time.delayedCall(600, () => {
             this.isTransitioning = false;
@@ -53,16 +57,15 @@ window.EndingScene = class EndingScene extends Phaser.Scene {
 
     this.typewriter.start();
 
-    this.add.text(width / 2, height - 40, "Tap to continue",
-      { fontSize: "14px", color: "#aaaaaa" }).setOrigin(0.5);
+    const tapLabel = window.I18N_STRINGS && window.I18N_STRINGS[window.I18n.lang] && window.I18N_STRINGS[window.I18n.lang].ending
+      ? window.I18N_STRINGS[window.I18n.lang].ending.tapContinue
+      : window.I18N_STRINGS.en.ending.tapContinue;
 
-    // Handle taps:
-    // - if typing -> skip current line
-    // - else -> advance to next line
+    this.add.text(width / 2, height - 40, tapLabel, { fontSize: "14px", color: "#aaaaaa" }).setOrigin(0.5);
+
     this.input.on("pointerdown", () => {
       if (this.isTransitioning) return;
-      if (!this.typewriter) return;
-      if (this.typewriter.isTyping) {
+      if (this.typewriter && this.typewriter.isTyping) {
         this.typewriter.skip();
       } else {
         this.typewriter.next();

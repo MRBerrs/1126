@@ -28,6 +28,7 @@ window.STORY_CHAPTERS_I18N = {
     },
 
     silent: {
+      bg: "bg-silent",
       lines: [
         "Silence felt safer.",
         "But it slowly created distance."

@@ -4,6 +4,7 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
     this.state = "IDLE";
     this.choices = [];
     this.isTransitioning = false;
+    this.currentChapter = null;
   }
 
   create() {
@@ -16,6 +17,9 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
       align: "center",
       wordWrap: { width: width * 0.85 }
     });
+
+    // language toggle top-right
+    this.createLangToggle(width - 60, 40);
 
     this.input.on("pointerdown", (pointer) => {
       if (this.isTransitioning) return;
@@ -37,19 +41,31 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
     this.loadChapter("intro");
   }
 
-  showTapFeedback(x, y) {
-    const circle = this.add.circle(x, y, 6, 0xffffff, 0.9).setDepth(100);
-    circle.setScale(0.6);
-    this.tweens.add({
-      targets: circle, scale: 2.5, alpha: 0, duration: 400, ease: "Cubic.easeOut",
-      onComplete: () => circle.destroy()
+  createLangToggle(x, y) {
+    const size = 40;
+    this.langBtnBg = this.add.rectangle(x, y, size, size, 0x222222).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(100);
+    this.langBtnLabel = this.add.text(x, y, window.I18n.lang.toUpperCase(), { fontSize: "14px", color: "#fff" }).setOrigin(0.5).setDepth(101);
+
+    this.langBtnBg.on("pointerup", () => {
+      const next = window.I18n.lang === 'en' ? 'tr' : 'en';
+      window.I18n.setLang(next);
+      this.langBtnLabel.setText(next.toUpperCase());
+      // reload current chapter in new language
+      if (this.currentChapter) this.loadChapter(this.currentChapter);
     });
   }
 
+  showTapFeedback(x, y) {
+    const circle = this.add.circle(x, y, 6, 0xffffff, 0.9).setDepth(100);
+    circle.setScale(0.6);
+    this.tweens.add({ targets: circle, scale: 2.5, alpha: 0, duration: 400, ease: "Cubic.easeOut", onComplete: () => circle.destroy() });
+  }
+
   loadChapter(id) {
-    // allow calls from transition callback (we ensure flag cleared before calling)
+    // allow load calls; set currentChapter for language toggle refresh
+    this.currentChapter = id;
     this.clearChoices();
-    const chapter = window.STORY_CHAPTERS[id];
+    const chapter = window.I18n.getChapter(id);
     this.state = "TYPING";
 
     if (chapter && chapter.bg) {
@@ -73,7 +89,6 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
           this.scene.start("EndingScene");
         });
       } else if (chapter && chapter.next) {
-        // immediate auto-next (no fade)
         this.loadChapter(chapter.next);
       }
     };
@@ -84,7 +99,6 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
   showChoices(choices) {
     if (!choices || !choices.length) return;
     const { width, height } = this.scale;
-
     choices.forEach((c, i) => {
       const btn = new window.ChoiceButton(
         this,
@@ -96,15 +110,11 @@ window.StoryScene = class StoryScene extends Phaser.Scene {
           this.isTransitioning = true;
           this.input.enabled = false;
           this.clearChoices();
-
-          // fadeOut then, after delay, UNSET transitioning and load next chapter
           this.cameras.main.fadeOut(500);
           this.time.delayedCall(500, () => {
-            // clear transition lock BEFORE calling loadChapter so loadChapter runs
             this.isTransitioning = false;
             this.input.enabled = true;
             this.loadChapter(c.next);
-            // fade the camera back in so new text/buttons visible
             this.cameras.main.fadeIn(300);
           });
         }
