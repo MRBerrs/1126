@@ -9,6 +9,7 @@ class BootScene extends Phaser.Scene {
     this.load.image("bg-argue", "assets/bg/bg_argument.jpg");
     this.load.image("bg-sorry", "assets/bg/bg_opening.png");
     this.load.image("bg-ending", "assets/bg/bg_ending (1).jpg");
+    this.load.image("bg-birthday", "assets/bg/bg_birthday (1).jpg");
 
     this.load.audio("bgm", "assets/audio/emotional-background-437820.mp3");
   }
