@@ -1,6 +1,7 @@
 class EndingScene extends Phaser.Scene {
   constructor() {
     super("EndingScene");
+    this.celebrateBtn = null;
   }
 
   create() {
@@ -9,19 +10,48 @@ class EndingScene extends Phaser.Scene {
     this.add.image(width / 2, height / 2, "bg-ending")
       .setDisplaySize(width, height);
 
-    this.add.text(width / 2, height / 2,
-      "Maybe we haven't met each other yet.\nBut believe me.\nI will come there,\nto fulfill my promise to you.",
-      {
-        fontSize: Math.round(width * 0.04) + "px",
-        color: "#ffffff",
-        align: "center",
-        wordWrap: { width: width * 0.85 }
-      }
+    this.typewriter = new Typewriter(this, width / 2, height * 0.35, {
+      fontSize: Math.round(width * 0.04) + "px",
+      color: "#ffffff",
+      align: "center",
+      wordWrap: { width: width * 0.85 }
+    });
+
+    const lines = [
+      "Maybe we haven't met each other yet.",
+      "But believe me.",
+      "I will come there,",
+      "to fulfill my promise to you."
+    ];
+
+    this.typewriter.setLines(lines);
+
+    this.typewriter.onFinish = () => {
+      this.celebrateBtn = new ChoiceButton(
+        this,
+        width / 2,
+        height * 0.7,
+        "Celebrate 🎉",
+        () => {
+          if (this.celebrateBtn) {
+            this.celebrateBtn.destroy();
+            this.celebrateBtn = null;
+          }
+          this.cameras.main.fadeOut(600, 0, 0, 0);
+          this.time.delayedCall(600, () => this.scene.start("CelebrationScene"));
+        }
+      );
+    };
+
+    this.typewriter.start();
+
+    this.add.text(width / 2, height - 40,
+      "Tap to continue",
+      { fontSize: "14px", color: "#aaaaaa" }
     ).setOrigin(0.5);
 
-    this.add.text(width / 2, height - 80,
-      "Happy Birthday 🤍",
-      { fontSize: "16px", color: "#aaaaaa" }
-    ).setOrigin(0.5);
+    this.input.on("pointerdown", () => {
+      if (this.typewriter && this.typewriter.isTyping) this.typewriter.skip();
+    });
   }
 }

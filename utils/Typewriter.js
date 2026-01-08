@@ -10,7 +10,9 @@ class Typewriter {
     this.isTyping = false;
     this.event = null;
 
+    // Callbacks
     this.onAllComplete = null;
+    this.onFinish = null;
   }
 
   setLines(lines) {
@@ -21,6 +23,7 @@ class Typewriter {
   start() {
     if (this.lineIndex >= this.lines.length) {
       if (this.onAllComplete) this.onAllComplete();
+      if (this.onFinish) this.onFinish();
       return;
     }
 
@@ -44,6 +47,10 @@ class Typewriter {
       },
       onComplete: () => {
         this.isTyping = false;
+        if (this.lineIndex >= this.lines.length - 1) {
+          if (this.onAllComplete) this.onAllComplete();
+          if (this.onFinish) this.onFinish();
+        }
       }
     });
   }
@@ -58,6 +65,11 @@ class Typewriter {
 
     this.textObj.setText(this.lines[this.lineIndex]);
     this.isTyping = false;
+
+    if (this.lineIndex >= this.lines.length - 1) {
+      if (this.onAllComplete) this.onAllComplete();
+      if (this.onFinish) this.onFinish();
+    }
   }
 
   next() {

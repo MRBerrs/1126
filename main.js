@@ -14,7 +14,8 @@ const config = {
     BootScene,
     MenuScene,
     StoryScene,
-    EndingScene
+    EndingScene,
+    CelebrationScene
   ]
 };
 

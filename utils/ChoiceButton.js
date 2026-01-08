@@ -10,12 +10,13 @@ class ChoiceButton {
     this.bg = scene.add.rectangle(x, y, btnWidth, btnHeight, 0x222222)
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
-      .setDepth(5);
+      .setDepth(20)
+      .setScale(1);
 
     this.label = scene.add.text(x, y, text, {
       fontSize: Math.round(width * 0.035) + "px",
       color: "#ffffff"
-    }).setOrigin(0.5).setDepth(6);
+    }).setOrigin(0.5).setDepth(21).setScale(1);
 
     this.bg.on("pointerover", () => {
       this.bg.setFillStyle(0x444444);
@@ -25,13 +26,24 @@ class ChoiceButton {
       this.bg.setFillStyle(0x222222);
     });
 
-    this.bg.on("pointerdown", () => {
-      callback();
+    // use pointerup and small press animation, then call callback
+    this.bg.on("pointerup", () => {
+      this.scene.tweens.add({
+        targets: [this.bg, this.label],
+        scaleX: 0.95,
+        scaleY: 0.95,
+        duration: 80,
+        yoyo: true,
+        ease: "Power1",
+        onComplete: () => {
+          if (typeof callback === "function") callback();
+        }
+      });
     });
   }
 
   destroy() {
-    this.bg.destroy();
-    this.label.destroy();
+    if (this.bg) this.bg.destroy();
+    if (this.label) this.label.destroy();
   }
 }

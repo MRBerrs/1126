@@ -20,11 +20,25 @@ class StoryScene extends Phaser.Scene {
       wordWrap: { width: width * 0.85 }
     });
 
-    this.input.on("pointerdown", () => {
+    this.input.on("pointerdown", (pointer) => {
+      this.showTapFeedback(pointer.x, pointer.y);
       if (this.state === "TYPING") this.typewriter.next();
     });
 
     this.loadChapter("intro");
+  }
+
+  showTapFeedback(x, y) {
+    const circle = this.add.circle(x, y, 6, 0xffffff, 0.9).setDepth(50);
+    circle.setScale(0.6);
+    this.tweens.add({
+      targets: circle,
+      scale: 2.5,
+      alpha: 0,
+      duration: 400,
+      ease: "Cubic.easeOut",
+      onComplete: () => circle.destroy()
+    });
   }
 
   loadChapter(id) {
@@ -38,12 +52,14 @@ class StoryScene extends Phaser.Scene {
     }
 
     this.typewriter.setLines(chapter.lines);
+
     this.typewriter.onFinish = () => {
       if (chapter.choices) {
         this.state = "CHOICE";
         this.showChoices(chapter.choices);
       } else if (chapter.next === "ending") {
-        this.scene.start("EndingScene");
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => this.scene.start("EndingScene"));
       } else {
         this.loadChapter(chapter.next);
       }
@@ -61,7 +77,14 @@ class StoryScene extends Phaser.Scene {
         width / 2,
         height * (0.6 + i * 0.08),
         c.text,
-        () => this.loadChapter(c.next)
+        () => {
+          // clear choices immediately to avoid double clicks
+          this.clearChoices();
+          this.cameras.main.fadeOut(500, 0, 0, 0);
+          this.time.delayedCall(500, () => {
+            this.loadChapter(c.next);
+          });
+        }
       );
       this.choices.push(btn);
     });
