@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Our Story</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #game {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="game"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+
+  <!-- story data -->
+  <script src="story/chapters.js"></script>
+
+  <!-- utils -->
+  <script src="utils/Typewriter.js"></script>
+  <script src="utils/ChoiceButton.js"></script>
+
+  <!-- scenes -->
+  <script src="scenes/BootScene.js"></script>
+  <script src="scenes/MenuScene.js"></script>
+  <script src="scenes/StoryScene.js"></script>
+  <script src="scenes/EndingScene.js"></script>
+
+  <!-- main -->
+  <script src="main.js"></script>
+</body>
+</html>
