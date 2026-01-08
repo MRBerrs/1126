@@ -1,4 +1,4 @@
-class Typewriter {
+window.Typewriter = class Typewriter {
   constructor(scene, x, y, style) {
     this.scene = scene;
     this.textObj = scene.add.text(x, y, "", style).setOrigin(0.5);
@@ -10,14 +10,16 @@ class Typewriter {
     this.isTyping = false;
     this.event = null;
 
-    // Callbacks
-    this.onAllComplete = null; // existing name
-    this.onFinish = null;      // alias StoryScene/Ending expect
+    this.onAllComplete = null;
+    this.onFinish = null;
   }
 
   setLines(lines) {
-    this.lines = lines;
+    this.lines = lines || [];
     this.lineIndex = 0;
+    this.charIndex = 0;
+    this.isTyping = false;
+    if (this.event) { this.event.remove(false); this.event = null; }
   }
 
   start() {
@@ -47,7 +49,6 @@ class Typewriter {
       },
       onComplete: () => {
         this.isTyping = false;
-        // If this was the final line, notify finish
         if (this.lineIndex >= this.lines.length - 1) {
           if (this.onAllComplete) this.onAllComplete();
           if (this.onFinish) this.onFinish();
@@ -58,15 +59,9 @@ class Typewriter {
 
   skip() {
     if (!this.isTyping) return;
-
-    if (this.event) {
-      this.event.remove(false);
-      this.event = null;
-    }
-
+    if (this.event) { this.event.remove(false); this.event = null; }
     this.textObj.setText(this.lines[this.lineIndex] || "");
     this.isTyping = false;
-
     if (this.lineIndex >= this.lines.length - 1) {
       if (this.onAllComplete) this.onAllComplete();
       if (this.onFinish) this.onFinish();
@@ -81,4 +76,4 @@ class Typewriter {
       this.start();
     }
   }
-}
+};

@@ -1,6 +1,4 @@
-const chapters = window.STORY_CHAPTERS;
-
-class StoryScene extends Phaser.Scene {
+window.StoryScene = class StoryScene extends Phaser.Scene {
   constructor() {
     super("StoryScene");
     this.state = "IDLE";
@@ -12,7 +10,7 @@ class StoryScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.bg = this.add.image(width / 2, height / 2, "bg-chat").setDisplaySize(width, height);
 
-    this.typewriter = new Typewriter(this, width / 2, height * 0.35, {
+    this.typewriter = new window.Typewriter(this, width / 2, height * 0.35, {
       fontSize: Math.round(width * 0.04) + "px",
       color: "#fff",
       align: "center",
@@ -20,8 +18,18 @@ class StoryScene extends Phaser.Scene {
     });
 
     this.input.on("pointerdown", (pointer) => {
-      // ignore inputs while transitioning between scenes
       if (this.isTransitioning) return;
+      try {
+        const cam = (this.cameras && this.cameras.main) ? this.cameras.main : null;
+        if (cam) {
+          const hits = this.input.manager.hitTest(pointer, this.children.list, cam);
+          if (hits && hits.length) {
+            const anyInteractive = hits.some(h => h.input && h.input.enabled);
+            if (anyInteractive) return;
+          }
+        }
+      } catch (e) { /* ignore */ }
+
       this.showTapFeedback(pointer.x, pointer.y);
       if (this.state === "TYPING") this.typewriter.next();
     });
@@ -39,24 +47,33 @@ class StoryScene extends Phaser.Scene {
   }
 
   loadChapter(id) {
-    if (this.isTransitioning) return;
+    // allow calls from transition callback (we ensure flag cleared before calling)
     this.clearChoices();
-    const chapter = chapters[id];
+    const chapter = window.STORY_CHAPTERS[id];
     this.state = "TYPING";
 
-    if (chapter.bg) {
+    if (chapter && chapter.bg) {
       this.bg.setTexture(chapter.bg);
       this.bg.setDisplaySize(this.scale.width, this.scale.height);
     }
 
-    this.typewriter.setLines(chapter.lines || []);
+    this.typewriter.setLines((chapter && chapter.lines) || []);
     this.typewriter.onFinish = () => {
-      if (chapter.choices) {
+      if (chapter && chapter.choices) {
         this.state = "CHOICE";
         this.showChoices(chapter.choices);
-      } else if (chapter.next === "ending") {
-        this.startSceneTransition("EndingScene", 600);
-      } else {
+      } else if (chapter && chapter.next === "ending") {
+        if (this.isTransitioning) return;
+        this.isTransitioning = true;
+        this.input.enabled = false;
+        this.cameras.main.fadeOut(600);
+        this.time.delayedCall(600, () => {
+          this.isTransitioning = false;
+          this.input.enabled = true;
+          this.scene.start("EndingScene");
+        });
+      } else if (chapter && chapter.next) {
+        // immediate auto-next (no fade)
         this.loadChapter(chapter.next);
       }
     };
@@ -65,9 +82,11 @@ class StoryScene extends Phaser.Scene {
   }
 
   showChoices(choices) {
+    if (!choices || !choices.length) return;
     const { width, height } = this.scale;
+
     choices.forEach((c, i) => {
-      const btn = new ChoiceButton(
+      const btn = new window.ChoiceButton(
         this,
         width / 2,
         height * (0.6 + i * 0.08),
@@ -75,16 +94,18 @@ class StoryScene extends Phaser.Scene {
         () => {
           if (this.isTransitioning) return;
           this.isTransitioning = true;
-          // disable all input so extra clicks don't do anything
           this.input.enabled = false;
-          // remove buttons so user can't click them again
           this.clearChoices();
-          this.cameras.main.fadeOut(500, 0, 0, 0);
+
+          // fadeOut then, after delay, UNSET transitioning and load next chapter
+          this.cameras.main.fadeOut(500);
           this.time.delayedCall(500, () => {
-            // restore input in the new chapter (loadChapter will run in same scene)
-            this.input.enabled = true;
+            // clear transition lock BEFORE calling loadChapter so loadChapter runs
             this.isTransitioning = false;
+            this.input.enabled = true;
             this.loadChapter(c.next);
+            // fade the camera back in so new text/buttons visible
+            this.cameras.main.fadeIn(300);
           });
         }
       );
@@ -92,20 +113,8 @@ class StoryScene extends Phaser.Scene {
     });
   }
 
-  startSceneTransition(targetScene, ms = 600) {
-    if (this.isTransitioning) return;
-    this.isTransitioning = true;
-    this.input.enabled = false;
-    this.cameras.main.fadeOut(ms, 0, 0, 0);
-    this.time.delayedCall(ms, () => {
-      this.isTransitioning = false;
-      this.input.enabled = true;
-      this.scene.start(targetScene);
-    });
-  }
-
   clearChoices() {
     this.choices.forEach(b => b.destroy());
     this.choices = [];
   }
-}
+};

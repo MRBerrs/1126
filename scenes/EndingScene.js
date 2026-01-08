@@ -1,4 +1,4 @@
-class EndingScene extends Phaser.Scene {
+window.EndingScene = class EndingScene extends Phaser.Scene {
   constructor() {
     super("EndingScene");
     this.celebrateBtn = null;
@@ -9,7 +9,10 @@ class EndingScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.add.image(width / 2, height / 2, "bg-ending").setDisplaySize(width, height);
 
-    this.typewriter = new Typewriter(this, width / 2, height * 0.35, {
+    // ensure visible if we came from a fadeOut
+    this.cameras.main.fadeIn(300);
+
+    this.typewriter = new window.Typewriter(this, width / 2, height * 0.35, {
       fontSize: Math.round(width * 0.04) + "px",
       color: "#ffffff",
       align: "center",
@@ -26,8 +29,8 @@ class EndingScene extends Phaser.Scene {
     this.typewriter.setLines(lines);
 
     this.typewriter.onFinish = () => {
-      // create Celebrate button
-      this.celebrateBtn = new ChoiceButton(
+      // show Celebrate button when all lines done
+      this.celebrateBtn = new window.ChoiceButton(
         this,
         width / 2,
         height * 0.7,
@@ -37,7 +40,8 @@ class EndingScene extends Phaser.Scene {
           this.isTransitioning = true;
           this.input.enabled = false;
           if (this.celebrateBtn) { this.celebrateBtn.destroy(); this.celebrateBtn = null; }
-          this.cameras.main.fadeOut(600, 0, 0, 0);
+
+          this.cameras.main.fadeOut(600);
           this.time.delayedCall(600, () => {
             this.isTransitioning = false;
             this.input.enabled = true;
@@ -52,8 +56,17 @@ class EndingScene extends Phaser.Scene {
     this.add.text(width / 2, height - 40, "Tap to continue",
       { fontSize: "14px", color: "#aaaaaa" }).setOrigin(0.5);
 
+    // Handle taps:
+    // - if typing -> skip current line
+    // - else -> advance to next line
     this.input.on("pointerdown", () => {
-      if (this.typewriter && this.typewriter.isTyping && !this.isTransitioning) this.typewriter.skip();
+      if (this.isTransitioning) return;
+      if (!this.typewriter) return;
+      if (this.typewriter.isTyping) {
+        this.typewriter.skip();
+      } else {
+        this.typewriter.next();
+      }
     });
   }
-}
+};
